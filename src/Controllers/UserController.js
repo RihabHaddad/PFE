@@ -13,6 +13,7 @@ getAllAdmins: async (req, res, next) => {
 
 findAdminById: async (req, res, next) => {
     const id = req.params.id;
+    
     try {
       const admin = await Admin.findById(id);
       if (!admin) {

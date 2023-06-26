@@ -39,12 +39,13 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: 'Identifiants invalides.' });
     }
 
+    
+
     // Vérifier le mot de passe
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Identifiants invalides.' });
+      return res.status(401).json({ message: 'Identifiants invalides2.' });
     }
-
     // Générer un token JWT
     const token = jwt.sign({ userId: user._id }, 'secretKey', { expiresIn: '1h' });
 

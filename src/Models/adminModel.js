@@ -18,23 +18,12 @@ const AdminSchema = new Schema({
     type: String,
     required: true
   },
-  saltSecret : String
+
 });
 // Events
-AdminSchema.pre('save', function (next) {
-    bcrypt.genSalt(10, (err, salt) => {
-        bcrypt.hash(this.password, salt, (err, hash) => {
-            this.password = hash;
-            this.saltSecret = salt;
-            next();
-        });
-    });
-});
 
 
-AdminSchema.methods.verifyPassword = function (password) {
-    return bcrypt.compareSync(password, this.password);
-};
+
 
 // Custom validation for email
 AdminSchema.path('email').validate((val) => {
@@ -43,14 +32,7 @@ AdminSchema.path('email').validate((val) => {
 }, 'Invalid e-mail.');
 
 
-AdminSchema.methods.generateJwt = function () {
-    return jwt.sign({
-        _id: this.name
-    }, "SECRET#123",
-        {
-            expiresIn: "10m"
-        });
-}
+
 
 const Admin = mongoose.model('admins', AdminSchema);
 module.exports = Admin;

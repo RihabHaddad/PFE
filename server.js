@@ -1,16 +1,20 @@
 const express = require('express');
 const app = express();
+const cors = require('cors');
 const authRoutes = require('./src/Routes/authRoutes');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const AdminRoute = require('./src/Routes/userRoutes');
+const PassRoutes = require('./src/Routes/passRoutes');
+const AssureRoutes = require('./src/Routes/assureRoutes');
+const RegistrationcarRoutes = require('./src/Routes/registrationRoutes');
 
 // Middleware pour le traitement des données JSON
 app.use(express.json());
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-
+app.use(cors());
 
 mongoose.connect('mongodb://root:rootpassword@192.168.136.7:27017/', { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Connexion à MongoDB établie'))
@@ -18,9 +22,11 @@ mongoose.connect('mongodb://root:rootpassword@192.168.136.7:27017/', { useNewUrl
 
 // Routes d'authentification
 app.use('/api/auth', authRoutes);
-
+app.use('/api/car', RegistrationcarRoutes)
 app.use('/api/Admins', AdminRoute);
+app.use('/', PassRoutes);
+app.use('/api/assures', AssureRoutes);
 // Démarrer le serveur
-app.listen(8000, () => {
-  console.log('Serveur démarré sur le port 3000');
+app.listen(8002, () => {
+  console.log('Serveur démarré sur le port 8002');
 });

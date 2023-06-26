@@ -6,11 +6,6 @@ const UserSchema = new Schema({
     type: String,
     required: true
   },
-  email: {
-    type: String,
-    required: true,
-    unique: true
-  },
  
   Firstname: {
     type: String,
@@ -20,6 +15,11 @@ const UserSchema = new Schema({
     type: String,
     required: true
   },
+  Email: {
+    type: String,
+    required: true,
+    unique: true
+  },
   PhoneNumber: {
     type: String,
     required: true
@@ -28,17 +28,18 @@ const UserSchema = new Schema({
     type: String,
     required: true
   },
-  Driverlisence: {
+  Drivinglisence: {
     type: String,
     required: true,
     unique: true
-  }
+  },
+  
 });
 
-UserSchema.path('email').validate((val) => {
+UserSchema.path('Email').validate((val) => {
   const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return emailRegex.test(val);
 }, 'Invalid e-mail.');
 
-const User = mongoose.model('User', UserSchema);
+const User = mongoose.model('users', UserSchema);
 module.exports = User;
