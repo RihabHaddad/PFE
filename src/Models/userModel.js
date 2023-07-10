@@ -1,45 +1,35 @@
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
 
-const UserSchema = new Schema({
+const userSchema = new mongoose.Schema({
   username: {
     type: String,
     required: true
   },
- 
-  Firstname: {
+  firstName: {
     type: String,
     required: true
   },
-  Lastname: {
+  lastName: {
     type: String,
     required: true
   },
-  Email: {
+  email: {
     type: String,
     required: true,
     unique: true
   },
-  PhoneNumber: {
+  phoneNumber: {
     type: String,
     required: true
   },
-  CIN: {
+  cin: {
     type: String,
     required: true
   },
-  Drivinglisence: {
+  drivingLicense: {
     type: String,
-    required: true,
-    unique: true
-  },
-  
+    required: true
+  }
 });
 
-UserSchema.path('Email').validate((val) => {
-  const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-  return emailRegex.test(val);
-}, 'Invalid e-mail.');
-
-const User = mongoose.model('users', UserSchema);
-module.exports = User;
+module.exports = mongoose.model('users', userSchema);

@@ -1,27 +1,25 @@
 const User = require('../Models/userModel');
 
+
 exports.createAssure = async (req, res) => {
   try {
-    const { username, Firstname, Lastname, Email, PhoneNumber, CIN, Drivinglisence } = req.body;
+    const { username, firstName, lastName, email, phoneNumber, cin, drivingLicense } = req.body;
 
-    // Vérifier si l'utilisateur existe déjà dans la base de données
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({ message: 'L\'utilisateur existe déjà' });
     }
 
-    // Créer un nouvel utilisateur
     const newUser = new User({
       username,
-      Firstname, 
-      Lastname, 
-      Email, 
-      PhoneNumber, 
-      CIN, 
-      Drivinglisence 
+      firstName,
+      lastName,
+      email,
+      phoneNumber,
+      cin,
+      drivingLicense
     });
 
-    // Enregistrer l'utilisateur dans la base de données
     const createdUser = await newUser.save();
 
     res.status(201).json(createdUser);
@@ -29,6 +27,7 @@ exports.createAssure = async (req, res) => {
     res.status(500).json({ message: 'Une erreur est survenue lors de la création de l\'utilisateur.' });
   }
 };
+
 
 exports.getAllAssure =  async (req, res, next) => {
   try {
