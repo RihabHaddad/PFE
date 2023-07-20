@@ -1,5 +1,5 @@
 const User = require('../Models/userModel');
-
+const Assure = require('../Models/userModel');
 
 exports.createAssure = async (req, res) => {
   try {
@@ -69,9 +69,11 @@ exports.updateAssure = async (req, res) => {
 
     res.status(200).json(updatedAssure);
   } catch (error) {
+    console.error('Erreur lors de la mise à jour de l\'assuré :', error); // Afficher l'erreur dans les logs
     res.status(500).json({ message: 'Une erreur est survenue lors de la mise à jour de l\'assuré.' });
   }
 };
+
 exports.deleteAssure = async (req, res) => {
   try {
     const assureId = req.params.id;
