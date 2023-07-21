@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const Admin = require('../Models/adminModel');
+const bcrypt = require('bcrypt');
 
 // Request Password Reset
 exports.requestPasswordReset = async (req, res) => {

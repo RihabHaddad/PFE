@@ -8,6 +8,8 @@ const AdminRoute = require('./src/Routes/userRoutes');
 const PassRoutes = require('./src/Routes/passRoutes');
 const AssureRoutes = require('./src/Routes/assureRoutes');
 const RegistrationcarRoutes = require('./src/Routes/registrationRoutes');
+const User = require('./src/Models/userModel');
+
 
 // Middleware pour le traitement des données JSON
 app.use(express.json());
@@ -33,6 +35,33 @@ app.use('/api/car', RegistrationcarRoutes)
 app.use('/api/Admins', AdminRoute);
 app.use('/', PassRoutes);
 app.use('/api/assures', AssureRoutes);
+
+app.get('/search', (req, res) => {
+  const searchTerm = req.query.username;
+
+  if (!searchTerm) {
+    return res.status(400).json({ message: 'Veuillez fournir un terme de recherche valide' });
+  }
+
+  User.find({
+    $or: [
+      { firstName: { $regex: new RegExp(searchTerm, 'i') } },
+      { lastName: { $regex: new RegExp(searchTerm, 'i') } },
+      { email: { $regex: new RegExp(searchTerm, 'i') } }
+    ]
+  })
+    .then(users => {
+      if (users.length === 0) {
+        return res.status(404).json({ message: 'Aucun utilisateur trouvé' });
+      }
+      res.json(users);
+    })
+    .catch(error => res.status(500).json({ message: 'Une erreur est survenue lors de la recherche des utilisateurs', error }));
+});
+
+
+
+
 // Démarrer le serveur
 app.listen(8002, () => {
   console.log('Serveur démarré sur le port 8002');
