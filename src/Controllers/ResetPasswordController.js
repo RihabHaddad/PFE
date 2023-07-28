@@ -16,7 +16,7 @@ exports.requestPasswordReset = async (req, res) => {
 
     // Set reset token and expiration in user document
     user.resetToken = resetToken;
-    user.resetTokenExpiration = Date.now() + 3600000; // Token expires in 1 hour
+    user.resetTokenExpiration = Date.now() + 3600000000; // Token expires in 1 hour
     await user.save();
 
   

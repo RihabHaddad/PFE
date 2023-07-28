@@ -3,14 +3,15 @@ const Schema = mongoose.Schema;
 
 // Create a Schema
 const DistanceSchema = new Schema({
+    
     DriverId:{
         type: String,
         
     },
-    dis:{
+    Distance:{
         type: Number,
     },
-    distanceTotal:{
+    DistanceTotal:{
         type: Number,
     },
     time:{
