@@ -1,3 +1,4 @@
+const RegistrationCard = require('../Models/registrationCardModel');
 const User = require('../Models/userModel');
 const Assure = require('../Models/userModel');
 
@@ -87,4 +88,31 @@ exports.deleteAssure = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Une erreur est survenue lors de la suppression de l\'assuré.' });
   }
-};
+
+
+  
+  exports.calculateTotalUsersFromDatabase = async (req, res) => {
+    const url = 'mongodb://root:rootpassword@192.168.136.7:27017/';
+    const dbName = 'test';
+    const collectionName = 'users';
+  
+    try {
+      const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true });
+      const db = client.db(dbName);
+      const collection = db.collection(collectionName);
+  
+      const totalUsers = await collection.countDocuments({});
+  
+      client.close();
+  
+      res.status(200).json({ totalUsers });
+    } catch (error) {
+      console.error('Erreur lors du calcul du nombre d\'utilisateurs :', error);
+      res.status(500).json({ message: 'Une erreur est survenue lors du calcul du nombre total d\'utilisateurs.' });
+    }
+  };
+  
+
+ 
+  
+}

@@ -60,4 +60,31 @@ exports.getAccidentInfoByDeviceIdAndDate = async (req, res, next) => {
 
   }
 
+  const getTotalAssures = async () => {
+    try {
+      const countResult = await Assure.aggregate([
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 },
+          },
+        },
+      ]);
   
+      if (countResult.length > 0) {
+        const totalAssures = countResult[0].total;
+        console.log('Total assures:', totalAssures);
+        return totalAssures;
+      } else {
+        console.log('No assures found.');
+        return 0;
+      }
+    } catch (error) {
+      console.error('Error while fetching total assures:', error);
+      return 0;
+    }
+  };
+  
+  module.exports = {
+    getTotalAssures,
+  };
