@@ -103,18 +103,47 @@ exports.createNewRegistration = async (req, res) => {
     }
 
 
-exports.getvoitureparmarque = async (req, res) => {
-  try {
-    const carsCountByMarque = await RegistrationCard.aggregate([
-      { $group: { _id: '$marque', count: { $sum: 1 } } },
-      { $project: { marque: '$_id', count: 1, _id: 0 } }, // Rename _id to marque
-    ]);
-    res.json(carsCountByMarque);
-  } catch (error) {
-    console.error('Error while fetching car count by marque:', error);
-    res.status(500).json({ message: 'Erreur lors de la récupération des voitures par marque.' });
-  }
-};
+    const MongoClient = require('mongodb').MongoClient;
+
+    exports.calculateCarsByBrand() = async (req, res) => {
+      const url = 'mongodb://root:rootpassword@192.168.136.7:27017/';
+      const dbName = 'test';
+      const collectionName = 'registationcards';
+    
+      try {
+        const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true });
+        const db = client.db(dbName);
+        const collection = db.collection(collectionName);
+    
+        const pipeline = [
+          {
+            $group: {
+              _id: '$brand',
+              totalCars: { $sum: 1 }
+            }
+          }
+        ];
+    
+        const result = await collection.aggregate(pipeline).toArray();
+    
+        client.close();
+    
+        return result;
+      } catch (error) {
+        console.error('Erreur lors du calcul du nombre de voitures par marque :', error);
+        throw error;
+      }
+    }
+    
+    // Utilisation de la fonction
+    calculateCarsByBrand()
+      .then(result => {
+        console.log('Nombre de voitures par marque :', result);
+      })
+      .catch(error => {
+        console.error('Une erreur s\'est produite :', error);
+      });
+    
 
    
   }

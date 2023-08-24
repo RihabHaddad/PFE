@@ -10,6 +10,8 @@ const AssureRoutes = require('./src/Routes/assureRoutes');
 const RegistrationcarRoutes = require('./src/Routes/registrationRoutes');
 const User = require('./src/Models/userModel');
 const MongoClient = require('mongodb').MongoClient;
+const DriveKPI = require('./src/Models/DriverkpiModel');
+
 
 // Middleware pour le traitement des données JSON
 app.use(express.json());
@@ -33,6 +35,26 @@ app.use('/api/car', RegistrationcarRoutes)
 app.use('/api/Admins', AdminRoute);
 app.use('/', PassRoutes);
 app.use('/api/assures', AssureRoutes);
+app.get('/kpi/:driverId', async (req, res) => {
+  try {
+    const driverId = req.params.driverId;
+    console.log('Requested driverId:', driverId);
+
+    // Utilisez le modèle DriveKPI pour récupérer les KPI du driver
+    console.log('Fetching driver KPIs...');
+    const driverKPIs = await DriveKPI.find({ DriverId: driverId });
+    console.log('Driver KPIs:', driverKPIs);
+
+    res.status(200).json(driverKPIs);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Une erreur est survenue lors de la récupération des KPI du driver.' });
+  }
+});
+
+    
+ 
+
 app.get('/search', (req, res) => {
   const searchTerm = req.query.username;
 
@@ -73,6 +95,10 @@ app.get('/calculateCarsByBrand', async (req, res) => {
     res.status(500).json({ message: 'Une erreur est survenue lors du calcul du nombre de voitures par marque.' });
   }
 });
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Internal server error' });
+});
 async function calculateCarsByBrand() {
   const url =  'mongodb://root:rootpassword@192.168.136.7:27017/';
   const dbName = 'test';
@@ -103,10 +129,7 @@ async function calculateCarsByBrand() {
   }
 }
 // Gestionnaire d'erreurs
-app.use((err, req, res, next) => {
-  logger.error('Error middleware:', err);
-  res.status(500).json({ error: 'Internal server error' });
-});
+
 
 // Fonction pour calculer le nombre total d'utilisateurs à partir de la base de données
 async function calculateTotalUsersFromDatabase() {

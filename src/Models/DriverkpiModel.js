@@ -4,40 +4,39 @@ const Schema = mongoose.Schema;
 const DriveKPISchema = new Schema({
 
   DriverId: {
-    type: String
-  },  
-  MeanSpeed:{
-    type: String
+    type: String,
+    required: true
   },
-  
-  MaxSpeed:{
-    type: String 
+  MeanSpeed: {
+    type: Number,
+    required: true
   },
-  SPEED:{
-    type: String 
+  MaxSpeed: {
+    type: Number,
+    required: true
   },
-  EngineSpeed:{
-    type: String 
+  StdSpeed: {
+    type: Number,
+    required: true
   },
-  StdSpeed:{
-    type: String 
+  HarshAcceleration: {
+    type: Number,
+    required: true
   },
-  time:{
-    type:String
+  HarshBraking: {
+    type: Number,
+    required: true
   },
-  HarshAcceleration:{
-    type:String
+  HarshCornering: {
+    type: Number,
+    required: true
   },
-
-  HarshBraking:{
-    type:String
-  } ,
-
-  NightDriving:{
-    type:String
+  NightDriving: {
+    type: Boolean,
+    required: true
   }
 
 });
+
 const DriveKPI = mongoose.model('DriveKPI', DriveKPISchema);
 module.exports = DriveKPI;
-
