@@ -11,6 +11,7 @@ const RegistrationcarRoutes = require('./src/Routes/registrationRoutes');
 const User = require('./src/Models/userModel');
 const MongoClient = require('mongodb').MongoClient;
 const DriveKPI = require('./src/Models/DriverkpiModel');
+const http = require('http');
 
 
 // Middleware pour le traitement des données JSON
@@ -131,6 +132,7 @@ async function calculateCarsByBrand() {
 // Gestionnaire d'erreurs
 
 
+
 // Fonction pour calculer le nombre total d'utilisateurs à partir de la base de données
 async function calculateTotalUsersFromDatabase() {
   const url = 'mongodb://root:rootpassword@192.168.136.7:27017/';
@@ -152,6 +154,136 @@ async function calculateTotalUsersFromDatabase() {
     throw error;
   }
 }
+
+const Kafka = require('node-rdkafka');
+
+
+
+app.get('/api/latestSpeedData', (req, res) => {
+    // Get the latest speed and time from the arrays
+    const latestSpeed = speedData.length > 0 ? speedData[speedData.length - 1] : 0;
+    const latestTime = timeData.length > 0 ? new Date(timeData[timeData.length - 1]) : new Date();
+
+    res.json({
+        time: latestTime,
+        speed: latestSpeed
+    });
+});
+
+//kafka
+
+const kafkaConf = {
+  'group.id': 'my-consumer-group',
+  'metadata.broker.list': '192.168.136.6:9092'
+};
+
+const topicName = 'rawdata';
+
+const consumer = new Kafka.KafkaConsumer(kafkaConf, {});
+
+consumer.connect();
+
+let driver1SpeedData = []; // Array to store speed data for DriverId 1
+let driver1TimeData = [];  // Array to store time data for DriverId 1
+
+consumer.on('ready', () => {
+  consumer.subscribe([topicName]);
+  consumer.consume();
+});
+
+consumer.on('data', (message) => {
+  const messageValue = message.value.toString();
+  console.log(`Message received: ${messageValue}`);
+
+  // Parse the messageValue and extract relevant data
+  const data = JSON.parse(messageValue);
+  console.log('Parsed data:', data);
+
+  const currentTime = new Date(data.time).getTime(); // Convert time to milliseconds
+  const currentSpeed = parseFloat(data.SPEED);
+  const driverId = data.DriverId;
+
+  // Check if the DriverId matches the desired value (1)
+  if (driverId === "1") {
+      // Add data to arrays for DriverId 1
+      driver1SpeedData.push(currentSpeed);
+      driver1TimeData.push(currentTime);
+  }
+});
+
+app.get('/api/driver1Data', (req, res) => {
+  // Convert driver1TimeData to an array of formatted date strings
+  const formattedDriver1TimeData = driver1TimeData.map(time => new Date(time).toLocaleString());
+
+  // Return the arrays of driver1SpeedData and formattedDriver1TimeData
+  res.json({
+      speedData: driver1SpeedData,
+      timeData: formattedDriver1TimeData
+  });
+});
+
+
+//kafka notif 
+
+
+consumer.connect();
+
+const sseConnections = new Map();
+
+
+
+consumer.on('data', (message) => {
+    const messageValue = message.value.toString();
+    const data = JSON.parse(messageValue);
+
+    const currentSpeed = parseFloat(data.SPEED);
+    const driverId = data.DriverId;
+
+    if (currentSpeed > 100) {
+        const notification = {
+            driverId,
+            speed: currentSpeed,
+            message: `Driver ${driverId} has exceeded the speed limit with a speed of ${currentSpeed} km/h`
+        };
+
+        const sseResponse = `data: ${JSON.stringify(notification)}\n\n`;
+        if (sseConnections.has(driverId)) {
+            sseConnections.get(driverId).forEach(connection => {
+                connection.write(sseResponse);
+            });
+        }
+    }
+});
+
+app.use(express.static(__dirname + '/public'));
+
+app.get('/sse/:driverId', (req, res) => {
+    const driverId = req.params.driverId;
+
+    res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*' // Allow CORS
+    });
+
+    if (!sseConnections.has(driverId)) {
+        sseConnections.set(driverId, []);
+    }
+    
+    sseConnections.get(driverId).push(res);
+
+    req.on('close', () => {
+        const connections = sseConnections.get(driverId);
+        const index = connections.indexOf(res);
+        if (index !== -1) {
+            connections.splice(index, 1);
+            if (connections.length === 0) {
+                sseConnections.delete(driverId);
+            }
+        }
+    });
+});
 
 // Démarrer le serveur
 app.listen(8002, async () => {
