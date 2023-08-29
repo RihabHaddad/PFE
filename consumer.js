@@ -1,10 +1,9 @@
 const Kafka = require('node-rdkafka');
 const express = require('express');
-const app = express();
-const cors = require('cors');
+const http = require('http');
 
-// Utilisez CORS pour autoriser les requêtes de tous les domaines
-app.use(cors());
+const app = express();
+const server = http.createServer(app);
 
 const kafkaConf = {
     'group.id': 'my-consumer-group',
@@ -17,8 +16,7 @@ const consumer = new Kafka.KafkaConsumer(kafkaConf, {});
 
 consumer.connect();
 
-let driver1SpeedData = []; // Array to store speed data for DriverId 1
-let driver1TimeData = [];  // Array to store time data for DriverId 1
+const sseConnections = new Map();
 
 consumer.on('ready', () => {
     consumer.subscribe([topicName]);
@@ -27,35 +25,57 @@ consumer.on('ready', () => {
 
 consumer.on('data', (message) => {
     const messageValue = message.value.toString();
-    console.log(`Message received: ${messageValue}`);
-
-    // Parse the messageValue and extract relevant data
     const data = JSON.parse(messageValue);
-    console.log('Parsed data:', data);
 
-    const currentTime = new Date(data.time).getTime(); // Convert time to milliseconds
     const currentSpeed = parseFloat(data.SPEED);
     const driverId = data.DriverId;
 
-    // Check if the DriverId matches the desired value (1)
-    if (driverId === "1") {
-        // Add data to arrays for DriverId 1
-        driver1SpeedData.push(currentSpeed);
-        driver1TimeData.push(currentTime);
+    if (currentSpeed > 100) {
+        const notification = {
+            driverId,
+            speed: currentSpeed,
+            message: `Driver ${driverId} has exceeded the speed limit with a speed of ${currentSpeed} km/h`
+        };
+
+        const sseResponse = `data: ${JSON.stringify(notification)}\n\n`;
+        if (sseConnections.has(driverId)) {
+            sseConnections.get(driverId).forEach(connection => {
+                connection.write(sseResponse);
+            });
+        }
     }
 });
 
-app.get('/api/driver1Data', (req, res) => {
-    // Convert driver1TimeData to an array of formatted date strings
-    const formattedDriver1TimeData = driver1TimeData.map(time => new Date(time).toLocaleString());
+app.use(express.static(__dirname + '/public'));
 
-    // Return the arrays of driver1SpeedData and formattedDriver1TimeData
-    res.json({
-        speedData: driver1SpeedData,
-        timeData: formattedDriver1TimeData
+app.get('/sse/:driverId', (req, res) => {
+    const driverId = req.params.driverId;
+
+    res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*' // Allow CORS
+    });
+
+    if (!sseConnections.has(driverId)) {
+        sseConnections.set(driverId, []);
+    }
+    
+    sseConnections.get(driverId).push(res);
+
+    req.on('close', () => {
+        const connections = sseConnections.get(driverId);
+        const index = connections.indexOf(res);
+        if (index !== -1) {
+            connections.splice(index, 1);
+            if (connections.length === 0) {
+                sseConnections.delete(driverId);
+            }
+        }
     });
 });
 
-app.listen(4000, () => {
+server.listen(8002, () => {
     console.log('Server is listening on port 4000');
 });

@@ -284,7 +284,50 @@ app.get('/sse/:driverId', (req, res) => {
         }
     });
 });
+//map
+const driverLocations = new Map();
+consumer.on('data', (message) => {
+  const messageValue = message.value.toString();
+  const data = JSON.parse(messageValue);
 
+  const driverId = data.DriverId;
+  const latitude = parseFloat(data.Latitude);
+  const longitude = parseFloat(data.Longitude);
+
+  // Mettez à jour la localisation du conducteur dans la Map
+  driverLocations.set(driverId, { latitude, longitude });
+});
+
+app.get('/api/drivers', (req, res) => {
+  const driversArray = Array.from(driverLocations, ([driverId, location]) => ({ driverId, ...location }));
+  res.json(driversArray);
+});
+
+
+
+
+
+app.get('/api/total-distance/:driverId', async (req, res) => {
+const mongoURI = 'mongodb://root:rootpassword@192.168.136.7:27017/';
+const mongoDB = 'PFE';
+const mongoTotalCollection = 'TotalDistance';
+  const driverId = req.params.driverId;
+
+  const client = new MongoClient(mongoURI);
+  await client.connect();
+  const db = client.db(mongoDB);
+  const totalCollection = db.collection(mongoTotalCollection);
+
+  try {
+    const result = await totalCollection.findOne({ 'DriverId': driverId });
+    res.json(result ? result.TotalDistance : 0);
+  } catch (error) {
+    console.error('Failed to fetch total distance:', error);
+    res.status(500).json({ error: 'Failed to fetch total distance' });
+  } finally {
+    client.close();
+  }
+});
 // Démarrer le serveur
 app.listen(8002, async () => {
   console.log('Serveur démarré sur le port 8002');
