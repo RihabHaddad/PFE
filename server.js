@@ -12,6 +12,8 @@ const User = require('./src/Models/userModel');
 const MongoClient = require('mongodb').MongoClient;
 const DriveKPI = require('./src/Models/DriverkpiModel');
 const http = require('http');
+const EcoDrivingKPIs = require('./src/Models/EcoDrivingModel');
+
 
 
 // Middleware pour le traitement des données JSON
@@ -29,7 +31,15 @@ app.use(function(req, res, next) {
 mongoose.connect('mongodb://root:rootpassword@192.168.136.7:27017/', { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Connexion à MongoDB établie'))
   .catch((err) => console.error('Erreur de connexion à MongoDB', err));
-
+  app.get('/userscards', async (req, res) => {
+    try {
+      const users = await User.find().populate('registrationCards');
+      res.json(users);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
 // Routes d'authentification
 app.use('/api/auth', authRoutes);
 app.use('/api/car', RegistrationcarRoutes)
@@ -156,7 +166,16 @@ async function calculateTotalUsersFromDatabase() {
 }
 
 const Kafka = require('node-rdkafka');
+app.get('/api/latestSpeedData', (req, res) => {
+  // Get the latest speed and time from the arrays
+  const latestSpeed = speedData.length > 0 ? speedData[speedData.length - 1] : 0;
+  const latestTime = timeData.length > 0 ? new Date(timeData[timeData.length - 1]) : new Date();
 
+  res.json({
+      time: latestTime,
+      speed: latestSpeed
+  });
+});
 
 
 app.get('/api/latestSpeedData', (req, res) => {
@@ -221,6 +240,37 @@ app.get('/api/driver1Data', (req, res) => {
       timeData: formattedDriver1TimeData
   });
 });
+
+
+
+//eco drive
+app.get('/ecodrivingkpis/:driverId', async (req, res) => {
+  try {
+    const pfeMongoURI = 'mongodb://root:rootpassword@192.168.136.7:27017/';
+    const mongoDB = 'PFE';
+    
+    const client = new MongoClient(pfeMongoURI);
+    await client.connect();
+    const db = client.db(mongoDB);
+
+    const EcoDrivingKPIsCollection = db.collection('EcoDrivingKPIs'); // Utilisez directement la collection
+
+    const driverId = req.params.driverId;
+    console.log('Requested driverId:', driverId);
+    console.log('Fetching ecodrivingkpis...');
+    const ecodrivingKPIs = await EcoDrivingKPIsCollection.find({ DriverId: driverId }).toArray();
+    console.log('EcoDriving KPIs:', ecodrivingKPIs);
+
+    await client.close(); // Fermez la connexion
+
+    res.status(200).json(ecodrivingKPIs);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Une erreur est survenue lors de la récupération des KPIs ecodriving.' });
+  }
+});
+
+
 
 
 //kafka notif 
@@ -328,6 +378,61 @@ const mongoTotalCollection = 'TotalDistance';
     client.close();
   }
 });
+app.get('/api/distance/:driverId', async (req, res) => {
+  const mongoURI = 'mongodb://root:rootpassword@192.168.136.7:27017/';
+  const mongoDB = 'PFE';
+  const mongoCollection = 'Distance';
+  const driverId = req.params.driverId;
+  
+  const client = new MongoClient(mongoURI);
+  await client.connect();
+  const db = client.db(mongoDB);
+  const distCollection = db.collection(mongoCollection);
+  
+  try {
+    const results = await distCollection.find({ 'DriverId': driverId }).toArray();
+    const distancesAndTimes = results.map(result => ({
+      Distance: result.Distance,
+      Time: result.Time
+    }));
+    res.json(distancesAndTimes);
+  } catch (error) {
+    console.error('Failed to fetch distances and times:', error);
+    res.status(500).json({ error: 'Failed to fetch distances and times' });
+  } finally {
+    client.close();
+  }
+});
+
+app.get('/api/fuel/:driverId', async (req, res) => {
+  const mongoURI = 'mongodb://root:rootpassword@192.168.136.7:27017/';
+  const mongoDB = 'PFE';
+  const mongoCollection = 'EcoDrivingKPIs';
+  const driverId = req.params.driverId;
+  
+  const client = new MongoClient(mongoURI);
+  await client.connect();
+  const db = client.db(mongoDB);
+  const distCollection = db.collection(mongoCollection);
+  
+  try {
+    const results = await distCollection.find({ 'DriverId': driverId }).toArray();
+    const Fuel = results.map(result => ({
+      
+FuelConsumption: result.
+FuelConsumption,
+     
+    }));
+    res.json(Fuel);
+  } catch (error) {
+    console.error('Failed to fetch distances and times:', error);
+    res.status(500).json({ error: 'Failed to fetch distances and times' });
+  } finally {
+    client.close();
+  }
+});
+
+
 // Démarrer le serveur
 app.listen(8002, async () => {
   console.log('Serveur démarré sur le port 8002');

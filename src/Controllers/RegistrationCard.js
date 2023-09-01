@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const RegistrationCard = require('../Models/registrationCardModel.js');
-
+const User = require('../Models/userModel.js')
 exports.createNewRegistration = async (req, res) => {
   try {
     const cardData = req.body;
@@ -19,7 +19,19 @@ exports.createNewRegistration = async (req, res) => {
       Puissance: cardData.Puissance,
       NbrePlace: cardData.NbrePlace,
     });
+    
     const savedCard = await newCard.save();
+
+    // Trouvez l'utilisateur auquel associer la carte en fonction du DriverId
+    const user = await User.findOne({ DriverId: cardData.DriverId }); // Recherchez l'utilisateur avec le DriverId correspondant
+
+    if (user) {
+      // Ajoutez l'ID de la carte d'enregistrement à la liste des cartes de l'utilisateur
+      user.registrationCards.push(savedCard._id);
+
+      // Sauvegardez les modifications
+      await user.save();
+    }
 
     res.status(201).json(savedCard);
   } catch (error) {

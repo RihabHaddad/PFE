@@ -54,6 +54,7 @@ const RegistrationCardSchema = new Schema({
     required: true
   },
  
+ 
 });
 
 const RegistrationCard = mongoose.model('RegistrationCard', RegistrationCardSchema);

@@ -7,14 +7,15 @@ const MongoClient = require('mongodb').MongoClient;
 
 exports.createAssure = async (req, res) => {
   try {
-    const { username, firstName, lastName, email, phoneNumber, cin, drivingLicense } = req.body;
+    const {  DriverId, username, firstName, lastName, email, phoneNumber, cin, drivingLicense } = req.body;
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ DriverId});
     if (existingUser) {
       return res.status(409).json({ message: 'L\'utilisateur existe déjà' });
     }
 
     const newUser = new User({
+      DriverId,
       username,
       firstName,
       lastName,
@@ -23,7 +24,6 @@ exports.createAssure = async (req, res) => {
       cin,
       drivingLicense
     });
-
     const createdUser = await newUser.save();
 
     res.status(201).json(createdUser);

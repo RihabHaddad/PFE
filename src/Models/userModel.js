@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
+  DriverId: {
+    type: String,
+    required: true
+  },
   username: {
     type: String,
     required: true
@@ -29,7 +33,12 @@ const userSchema = new mongoose.Schema({
   drivingLicense: {
     type: String,
     required: true
-  }
+  },
+  registrationCards: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'RegistrationCard'
+  }]
 });
+
 
 module.exports = mongoose.model('users', userSchema);

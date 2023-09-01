@@ -22,6 +22,6 @@ const EcoDriveKPISchema = new Schema({
   }
 });
 
-const EcoDriveKPI = mongoose.model('EcoDriveKPI', EcoDriveKPISchema);
+const EcoDriveKPI = mongoose.model('EcoDrivingKPIs', EcoDriveKPISchema);
 module.exports = EcoDriveKPI;
 
