@@ -280,7 +280,18 @@ consumer.connect();
 
 const sseConnections = new Map();
 
+const twilio = require('twilio');
 
+// Configuration de la connexion à MongoDB
+const uri = 'mongodb://root:rootpassword@192.168.136.7:27017/';
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
+// Configuration Twilio
+const twilioAccountSid = 'AC54810e599e6ecd0e1502c6206533c37c';
+const twilioAuthToken = '7803b2f4cbc5a8725a27bae42bedc799';
+const twilioPhoneNumber = '+19208755729';
+
+const twilioClient = twilio(twilioAccountSid, twilioAuthToken);
 
 consumer.on('data', (message) => {
     const messageValue = message.value.toString();
@@ -289,20 +300,64 @@ consumer.on('data', (message) => {
     const currentSpeed = parseFloat(data.SPEED);
     const driverId = data.DriverId;
 
-    if (currentSpeed > 100) {
-        const notification = {
-            driverId,
-            speed: currentSpeed,
-            message: `Driver ${driverId} has exceeded the speed limit with a speed of ${currentSpeed} km/h`
-        };
+    // ...
 
-        const sseResponse = `data: ${JSON.stringify(notification)}\n\n`;
-        if (sseConnections.has(driverId)) {
-            sseConnections.get(driverId).forEach(connection => {
-                connection.write(sseResponse);
-            });
-        }
-    }
+if (currentSpeed > 100) {
+  const driverId = data.DriverId;
+  const notification = {
+    driverId,
+    speed: currentSpeed,
+    message: `Driver ${driverId} has exceeded the speed limit with a speed of ${currentSpeed} km/h`
+};
+
+const sseResponse = `data: ${JSON.stringify(notification)}\n\n`;
+if (sseConnections.has(driverId)) {
+    sseConnections.get(driverId).forEach(connection => {
+        connection.write(sseResponse);
+    });
+}
+
+  // Établir une connexion à MongoDB
+  client.connect(async (err) => {
+      if (err) {
+          console.error('Erreur lors de la connexion à MongoDB :', err);
+          return;
+      }
+      const driverId = data.DriverId;
+      const db = client.db('test');
+      const driversCollection = db.collection('users');
+
+      // Recherche du conducteur dans MongoDB par ID
+      try {
+          const User= await driversCollection.findOne({ driverId: DriverId });
+          if (User) {
+              const driverPhoneNumber = User.phoneNumber;
+
+              // Envoyer un message au numéro de téléphone du conducteur en utilisant Twilio
+              const notificationMessage = `Driver ${DriverId} has exceeded the speed limit with a speed of ${currentSpeed} km/h`;
+
+              twilioClient.messages
+                  .create({
+                      body: notificationMessage,
+                      from: twilioPhoneNumber,
+                      to: driverPhoneNumber
+                  })
+                  .then((message) => console.log(`Message Twilio envoyé avec succès : ${message.sid}`))
+                  .catch((error) => console.error('Erreur lors de l\'envoi du message Twilio :', error));
+              
+              // Ensuite, vous pouvez envoyer la notification en streaming ou via d'autres moyens comme précédemment.
+          } else {
+              console.log(`Conducteur avec l'ID ${driverId} introuvable dans MongoDB.`);
+          }
+      } catch (error) {
+          console.error('Erreur lors de la recherche du conducteur dans MongoDB :', error);
+      } finally {
+          // Fermer la connexion à MongoDB
+          client.close();
+      }
+  });
+}
+
 });
 
 app.use(express.static(__dirname + '/public'));
@@ -431,6 +486,38 @@ FuelConsumption,
     client.close();
   }
 });
+
+const ratingSchema = new mongoose.Schema({
+  value: Number, 
+  DriverId: String,// Assuming 'value' is where you store the rating value
+  // Add more fields as needed
+});
+
+const Rating = mongoose.model('Rating', ratingSchema);
+
+app.post('/api/ratings/:DriverId', async (req, res) => {
+  try {
+    // Crée un nouveau document de notation et enregistre-le dans la base de données
+    const ratingValue = req.body.rating; // Récupère la valeur du rating depuis le champ 'value'
+    const driverId = req.params.DriverId; // Récupère le DriverId depuis les paramètres de l'URL
+
+    const newRating = new Rating({
+      value: ratingValue,
+      DriverId: driverId, // Utilisez le bon nom de champ pour DriverId
+    });
+
+    const savedRating = await newRating.save();
+
+    console.log('Saved rating:', savedRating);
+
+    res.json({ message: 'Rating received and saved successfully' });
+  } catch (error) {
+    console.error('Error saving rating:', error);
+    res.status(500).json({ error: 'An error occurred while saving the rating' });
+  }
+});
+
+
 
 
 // Démarrer le serveur
