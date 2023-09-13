@@ -48,20 +48,32 @@ app.use('/', PassRoutes);
 app.use('/api/assures', AssureRoutes);
 app.get('/kpi/:driverId', async (req, res) => {
   try {
+    const pfeMongoURI = 'mongodb://root:rootpassword@192.168.136.7:27017/';
+    const mongoDB = 'PFE';
+    
+    const client = new MongoClient(pfeMongoURI);
+    await client.connect();
+    const db = client.db(mongoDB);
+
+    const DriverBehaviorKPIsCollection = db.collection('DriverBehaviorKPIs'); // Utilisez directement la collection
+
     const driverId = req.params.driverId;
     console.log('Requested driverId:', driverId);
-
-    // Utilisez le modèle DriveKPI pour récupérer les KPI du driver
     console.log('Fetching driver KPIs...');
-    const driverKPIs = await DriveKPI.find({ DriverId: driverId });
+    
+    const driverKPIs = await DriverBehaviorKPIsCollection.find({ DriverId: driverId }).toArray();
+    
     console.log('Driver KPIs:', driverKPIs);
+
+    await client.close(); // Fermez la connexion
 
     res.status(200).json(driverKPIs);
   } catch (error) {
     console.error('Error:', error);
-    res.status(500).json({ message: 'Une erreur est survenue lors de la récupération des KPI du driver.' });
+    res.status(500).json({ message: 'Une erreur est survenue lors de la récupération des KPI du conducteur.' });
   }
 });
+
 
     
  
