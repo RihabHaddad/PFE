@@ -1,31 +1,12 @@
+// accident.js
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
 
-const AccidentSchema = new Schema({
-
-  DriverId: {
-    type: String,
-    required: true
-  },  
-
-  Localisation: {
-    lat: Number,
-    lng: Number,
-    alt: Number
-  },
-
-  Damage: {
-    type: Boolean,
-    required: true
-  },
-  Date: {
-    type: Date,
-    required: true
-  }
+const accidentSchema = new mongoose.Schema({
+  altitude: Number,
+  latitude: Number,
+  longitude: Number,
+  DriverId: String,
+  // Ajoutez d'autres champs selon vos besoins
 });
 
-
-
-const Accident = mongoose.model('Accident', AccidentSchema);
-module.exports = Accident;
-
+module.exports = mongoose.model('Accident', accidentSchema, 'Accidents');

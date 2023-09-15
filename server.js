@@ -13,7 +13,7 @@ const MongoClient = require('mongodb').MongoClient;
 const DriveKPI = require('./src/Models/DriverkpiModel');
 const http = require('http');
 const EcoDrivingKPIs = require('./src/Models/EcoDrivingModel');
-
+const Accident = require('./src/Models/accidentModel');
 
 
 // Middleware pour le traitement des données JSON
@@ -75,12 +75,38 @@ app.get('/kpi/:driverId', async (req, res) => {
 });
 
 
+app.get('/acc', async (req, res) => {
+  try {
+    const pfeMongoURI = 'mongodb://root:rootpassword@192.168.136.7:27017/';
+    const mongoDB = 'PFE';
     
+    const client = new MongoClient(pfeMongoURI);
+    await client.connect();
+    const db = client.db(mongoDB);
+
+    const AccidentsCollection = db.collection('Accidents'); // Utilisez directement la collection "Accidents"
+
+    console.log('Fetching accidents...');
+    
+    const accidents = await AccidentsCollection.find().toArray();
+    
+    console.log('Accidents:', accidents);
+
+    await client.close(); // Fermez la connexion
+
+    res.status(200).json(accidents);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Une erreur est survenue lors de la récupération des accidents.' });
+  }
+});
+
+  
  
 
 app.get('/search', (req, res) => {
   const searchTerm = req.query.username;
-
+  console.log('Received search request for:', searchTerm);
   if (!searchTerm) {
     return res.status(400).json({ message: 'Veuillez fournir un terme de recherche valide' });
   }
