@@ -6,8 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
-    "build":"npm run build-ci",
-    "build-ci": "npm install && npm run build"
+    "build":"npm install && npm run build-ci",
+    "build-ci": "npm run build"
   },
   "author": "",
   "license": "ISC",
