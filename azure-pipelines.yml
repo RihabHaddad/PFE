@@ -1,0 +1,30 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- script: |
+    # Installez Node.js
+    curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+
+    # Installez npm
+    sudo apt-get install -y npm
+
+    # Installez les dépendances Node.js
+    npm install
+  displayName: 'Install Node.js and npm'
+
+- script: |
+    # Build de l'application (ajustez cette commande selon vos besoins)
+    npm run build
+  displayName: 'Build Application'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathtoPublish: '$(Build.SourcesDirectory)/dist'  
+    artifactName: 'nodejs-app'
+  displayName: 'Publish Artifact'
+
