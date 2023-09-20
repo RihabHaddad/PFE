@@ -6,7 +6,7 @@ router.post('/addassure', assureController.createAssure);
 router.get('/', assureController.getAllAssure);
 router.put('/updateAssure/:id', assureController.updateAssure);
 router.delete('/deleteassure/:id', assureController.deleteAssure);
-
+router.get('/:id', assureController.getAssureById);
 
   
 
