@@ -2,30 +2,45 @@ trigger:
 - main
 
 pool:
-  name: ubuntu
+  name: 'ubuntu'
 
-steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: '14.21.3'
-  displayName: 'Install Node.js'
+stages:
+- stage: Build
+  displayName: 'Build '
+  jobs:
+  - job: BuildJob
+    steps:
+    - task: UseNode@1
+      inputs:
+        version: '14.21.3'
+      displayName: 'Installer Node.js'
 
-- script: |
-    npm install -g npm@6.14.18 
-    npm ci 
-  displayName: 'Install Node.js and npm dependencies'
-- script: |
-    npm install 
-  displayName: 'npm install '
+    - script: |
+        cd 
+        npm install
+      displayName: 'Installer les dépendances'
 
-- script: |
-   npm run build
-  displayName: 'npm build '
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: '$(System.DefaultWorkingDirectory)/backend-directory'  
+        artifactName: 'backend-app'
+      displayName: 'Publier l''application backend'
 
-- task: PublishPipelineArtifact@1
-  inputs:
-    artifactName: e2e-server
-    targetPath: '$(Build.ArtifactStagingDirectory)'
-    publishLocation: 'pipeline'
-  displayName: 'Publish npm artifact'
+- stage: Deploy
+  displayName: 'Deploy Backend'
+  dependsOn: Build
+  jobs:
+  - job: DeployJob
+    steps:
+    - task: UseNode@1
+      inputs:
+        version: '14.21.3'
+      displayName: 'Installer Node.js'
+
+    - script: |
+        cd 
+        npm install
+        npm start # Ou la commande de démarrage de votre application backend
+      displayName: 'Démarrer l''application Node.js'
+
     
