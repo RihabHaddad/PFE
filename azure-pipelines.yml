@@ -12,9 +12,16 @@ steps:
 
 - script: |
     npm install 
-  displayName: 'npm install and build'
+  displayName: 'npm install '
 
 - script: |
    npm run build
-  displayName: 'build application' 
+  displayName: 'npm build '
+
+- task: PublishPipelineArtifact@1
+  inputs:
+    artifactName: e2e-server
+    targetPath: '$(Build.ArtifactStagingDirectory)'
+    publishLocation: 'pipeline'
+  displayName: 'Publish npm artifact'
     
