@@ -38,7 +38,7 @@ stages:
       displayName: 'Installer Node.js'
 
     - script: |
-        cd 
+        cd $(System.DefaultWorkingDirectory)
         npm install
         npm start # Ou la commande de démarrage de votre application backend
       displayName: 'Démarrer l''application Node.js'
