@@ -22,7 +22,7 @@ stages:
 
     - task: PublishBuildArtifacts@1
       inputs:
-        pathtoPublish: '$(System.DefaultWorkingDirectory)/backend-directory'  
+        pathtoPublish: '$(System.DefaultWorkingDirectory)'  
         artifactName: 'backend-app'
       displayName: 'Publier l''application backend'
 
