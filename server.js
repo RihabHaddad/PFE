@@ -27,10 +27,16 @@ app.use(function(req, res, next) {
   next();
 });
 
-// Connexion à la base de données MongoDB
-mongoose.connect('mongodb://root:rootpassword@192.168.136.7:27017/', { useNewUrlParser: true, useUnifiedTopology: true })
+require('dotenv').config();
+
+const env = process.env.NODE_ENV || 'development';
+const config = require(`./src/config/config.${env}.json`);
+
+mongoose.connect(config.MONGODB_CONNECTION_STRING, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Connexion à MongoDB établie'))
   .catch((err) => console.error('Erreur de connexion à MongoDB', err));
+// Connexion à la base de données MongoDB
+
   app.get('/userscards', async (req, res) => {
     try {
       const users = await User.find().populate('registrationCards');

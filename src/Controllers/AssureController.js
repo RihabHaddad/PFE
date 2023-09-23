@@ -3,7 +3,7 @@ const Assure = require('../Models/userModel');
 const DriveKPI = require('../Models/DriverkpiModel');
 const DriverBehavior = require('../Models/DriverBehaviorkpis');
 const MongoClient = require('mongodb').MongoClient;
-
+const mongoose = require('mongoose');
 
 exports.createAssure = async (req, res) => {
   try {
@@ -44,10 +44,12 @@ exports.getAllAssure = async (req, res) => {
 
 exports.getAssureById = async (req, res) => {
   try {
-    const assureId = req.params.id;
-    const assure = await User.findById(assureId);
-
+    const _id = req.params.id;
+    console.log('ID de l\'assuré recherché :', _id); // Ajoutez cette ligne
+    const assure = await User.findById(_id);
+    
     if (!assure) {
+      console.log('Assuré non trouvé dans la base de données.'); // Ajoutez cette ligne
       return res.status(404).json({ message: 'Assuré non trouvé.' });
     }
 
@@ -58,11 +60,12 @@ exports.getAssureById = async (req, res) => {
   }
 };
 
+
 exports.updateAssure = async (req, res) => {
   try {
-    const assureId = req.params.id;
+    const _id= req.params.id;
     const updates = req.body;
-    const updatedAssure = await User.findByIdAndUpdate(assureId, updates, { new: true });
+    const updatedAssure = await User.findByIdAndUpdate(_id, updates, { new: true });
 
     if (!updatedAssure) {
       return res.status(404).json({ message: 'Assuré non trouvé.' });
