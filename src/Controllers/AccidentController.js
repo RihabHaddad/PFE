@@ -16,9 +16,9 @@ exports.createNewAccident = async (req, res, next) => {
     next(error);
   }
 },
-exports.createNewAccidenttttt = async (req, res, next) => {
+exports.createNewAccidenttt = async (req, res, next) => {
   console.log(req.params);
-  console.log(req.body);
+  
 try {
   const AccidentObj = new Accident(req.body);
   const result = await AccidentObj.save();
