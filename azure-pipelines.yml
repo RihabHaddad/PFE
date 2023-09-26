@@ -7,11 +7,11 @@ pool:
 variables:
   nodeVersion: '14.21.3'
   webAppName: 'autoGuardapp'
-  azureSubscription: 'Azure for Students'
+  azureSubscription: 'pfe'
 
 stages:
 - stage: Build
-  displayName: 'Build et Publier'
+  displayName: 'Installer et Archiver'
   jobs:
   - job: BuildJob
     steps:
@@ -23,10 +23,6 @@ stages:
     - script: |
         npm install
       displayName: 'Installer les dépendances'
-
-    - script: |
-        npm run build
-      displayName: 'Construire l''application'
 
     - task: ArchiveFiles@2
       inputs:
