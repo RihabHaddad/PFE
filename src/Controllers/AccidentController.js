@@ -16,6 +16,22 @@ exports.createNewAccident = async (req, res, next) => {
     next(error);
   }
 },
+exports.createNewAccidenttttt = async (req, res, next) => {
+  console.log(req.params);
+  console.log(req.body);
+try {
+  const AccidentObj = new Accident(req.body);
+  const result = await AccidentObj.save();
+  res.send(result);
+} catch (error) {
+  console.log(error.message);
+  if (error.name === 'ValidationError') {
+    next(createError(422, error.message));
+    return;
+  }
+  next(error);
+}
+},
 exports.getAccidentInfoByDeviceIdAndDate = async (req, res, next) => {
 
     try {
