@@ -185,12 +185,15 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 async function calculateCarsByBrand() {
-  const url =  'mongodb://root:rootpassword@192.168.136.7:27017/';
+  const isProduction = process.env.NODE_ENV === 'production';
+  const connectionString = isProduction ? process.env.COSMOSDB_CONNECTION_STRING : process.env.MONGODB_CONNECTION_STRING;
+  
+  
   const dbName = 'test';
   const collectionName = 'registrationcards';
 
   try {
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true });
+    const client = await MongoClient.connect(connectionString, { useNewUrlParser: true, useUnifiedTopology: true });
     const db = client.db(dbName);
     const collection = db.collection(collectionName);
 
@@ -219,12 +222,13 @@ async function calculateCarsByBrand() {
 
 // Fonction pour calculer le nombre total d'utilisateurs à partir de la base de données
 async function calculateTotalUsersFromDatabase() {
-  const url = 'mongodb://root:rootpassword@192.168.136.7:27017/';
-  const dbName = 'test';
+  const isProduction = process.env.NODE_ENV === 'production';
+  const connectionString = isProduction ? process.env.COSMOSDB_CONNECTION_STRING : process.env.MONGODB_CONNECTION_STRING;
+    const dbName = 'test';
   const collectionName = 'users';
 
   try {
-    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true });
+    const client = await MongoClient.connect(connectionString, { useNewUrlParser: true, useUnifiedTopology: true });
     const db = client.db(dbName);
     const collection = db.collection(collectionName);
 
