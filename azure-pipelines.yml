@@ -61,5 +61,5 @@ stages:
         StartupCommand: 'npm start'
       env:
         NODE_ENV: $(NODE_ENV)
-        AZURE_COSMOS_CONNECTIONSTRING: $(AZURE_COSMOS_CONNECTIONSTRING)
+        MONGODB_CONNECTION_STRING: $(MONGODB_CONNECTION_STRING)
       displayName: 'Déployer sur Azure App Service'

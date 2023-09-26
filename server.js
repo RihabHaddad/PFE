@@ -1,7 +1,5 @@
 const express = require('express');
 const app = express();
-const jwt = require('jsonwebtoken');
-const Admin = require('./src/Models/adminModel');
 const cors = require('cors');
 const authRoutes = require('./src/Routes/authRoutes');
 const bodyParser = require('body-parser');
@@ -31,12 +29,12 @@ app.use(function(req, res, next) {
 
 require('dotenv').config();
 
+const env = process.env.NODE_ENV || 'development';
+const config = require(`./src/config/config.${env}.json`);
 
-const isProduction = process.env.NODE_ENV === 'production';
-const connectionString = isProduction ? process.env.COSMOSDB_CONNECTION_STRING : process.env.MONGODB_CONNECTION_STRING;
-
-mongoose.connect(connectionString, { useNewUrlParser: true, useUnifiedTopology: true });
-
+mongoose.connect(config.MONGODB_CONNECTION_STRING, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('Connexion à MongoDB établie'))
+  .catch((err) => console.error('Erreur de connexion à MongoDB', err));
 // Connexion à la base de données MongoDB
 
   app.get('/userscards', async (req, res) => {
@@ -56,7 +54,7 @@ app.use('/', PassRoutes);
 app.use('/api/assures', AssureRoutes);
 app.get('/kpi/:driverId', async (req, res) => {
   try {
-    const pfeMongoURI = 'mongodb://root:rootpassword@192.168.136.7:27017/';
+    const pfeMongoURI = 'config.MONGODB_CONNECTION_STRING';
     const mongoDB = 'PFE';
     
     const client = new MongoClient(pfeMongoURI);
@@ -85,7 +83,7 @@ app.get('/kpi/:driverId', async (req, res) => {
 
 app.get('/acc', async (req, res) => {
   try {
-    const pfeMongoURI = 'mongodb://root:rootpassword@192.168.136.7:27017/';
+    const pfeMongoURI = 'config.MONGODB_CONNECTION_STRING';
     const mongoDB = 'PFE';
     
     const client = new MongoClient(pfeMongoURI);
@@ -109,35 +107,7 @@ app.get('/acc', async (req, res) => {
   }
 });
 
-function verifyToken(req, res, next) {
-  const token = req.headers['authorization'].split('Bearer ')[1];
   
-  if (!token) {
-      return res.status(403).json({ message: 'Aucun token fourni.' });
-  }
-
-  jwt.verify(token, 'secretKey', (err, decoded) => {
-      if (err) {
-          return res.status(401).json({ message: 'Token non valide.' });
-      }
-      req.userId = decoded.userId;
-      next();
-  });
-}
-app.get('/me', verifyToken, async (req, res) => {
-  try {
-      const user = await Admin.findById(req.userId, '-password');
-      if (!user) {
-          return res.status(404).json({ message: 'Utilisateur non trouvé.' });
-      }
-      res.status(200).json(user);
-  } catch (error) {
-      console.error("Erreur lors de la récupération de l'utilisateur :", error);
-      res.status(500).json({ message: 'Erreur lors de la récupération des informations utilisateur.' });
-  }
-});
-
-
  
 
 app.get('/search', (req, res) => {
@@ -185,15 +155,12 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 async function calculateCarsByBrand() {
-  const isProduction = process.env.NODE_ENV === 'production';
-  const connectionString = isProduction ? process.env.COSMOSDB_CONNECTION_STRING : process.env.MONGODB_CONNECTION_STRING;
-  
-  
+  const url =  'config.MONGODB_CONNECTION_STRING';
   const dbName = 'test';
   const collectionName = 'registrationcards';
 
   try {
-    const client = await MongoClient.connect(connectionString, { useNewUrlParser: true, useUnifiedTopology: true });
+    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true });
     const db = client.db(dbName);
     const collection = db.collection(collectionName);
 
@@ -222,13 +189,12 @@ async function calculateCarsByBrand() {
 
 // Fonction pour calculer le nombre total d'utilisateurs à partir de la base de données
 async function calculateTotalUsersFromDatabase() {
-  const isProduction = process.env.NODE_ENV === 'production';
-  const connectionString = isProduction ? process.env.COSMOSDB_CONNECTION_STRING : process.env.MONGODB_CONNECTION_STRING;
-    const dbName = 'test';
+  const url = 'config.MONGODB_CONNECTION_STRING';
+  const dbName = 'test';
   const collectionName = 'users';
 
   try {
-    const client = await MongoClient.connect(connectionString, { useNewUrlParser: true, useUnifiedTopology: true });
+    const client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true });
     const db = client.db(dbName);
     const collection = db.collection(collectionName);
 
@@ -324,7 +290,7 @@ app.get('/api/driver1Data', (req, res) => {
 //eco drive
 app.get('/ecodrivingkpis/:driverId', async (req, res) => {
   try {
-    const pfeMongoURI = 'mongodb://root:rootpassword@192.168.136.7:27017/';
+    const pfeMongoURI = 'config.MONGODB_CONNECTION_STRING';
     const mongoDB = 'PFE';
     
     const client = new MongoClient(pfeMongoURI);
@@ -361,7 +327,7 @@ const sseConnections = new Map();
 const twilio = require('twilio');
 
 // Configuration de la connexion à MongoDB
-const uri = 'mongodb://root:rootpassword@192.168.136.7:27017/';
+const uri = 'config.MONGODB_CONNECTION_STRING';
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 // Configuration Twilio
@@ -380,7 +346,7 @@ consumer.on('data', (message) => {
 
     // ...
 
-if (currentSpeed > 120) {
+if (currentSpeed > 100) {
   const driverId = data.DriverId;
   const notification = {
     driverId,
@@ -491,7 +457,7 @@ app.get('/api/drivers', (req, res) => {
 
 
 app.get('/api/total-distance/:driverId', async (req, res) => {
-const mongoURI = 'mongodb://root:rootpassword@192.168.136.7:27017/';
+const mongoURI = 'config.MONGODB_CONNECTION_STRING';
 const mongoDB = 'PFE';
 const mongoTotalCollection = 'TotalDistance';
   const driverId = req.params.driverId;
@@ -512,7 +478,7 @@ const mongoTotalCollection = 'TotalDistance';
   }
 });
 app.get('/api/distance/:driverId', async (req, res) => {
-  const mongoURI = 'mongodb://root:rootpassword@192.168.136.7:27017/';
+  const mongoURI = 'config.MONGODB_CONNECTION_STRING';
   const mongoDB = 'PFE';
   const mongoCollection = 'Distance';
   const driverId = req.params.driverId;
@@ -538,7 +504,7 @@ app.get('/api/distance/:driverId', async (req, res) => {
 });
 
 app.get('/api/fuel/:driverId', async (req, res) => {
-  const mongoURI = 'mongodb://root:rootpassword@192.168.136.7:27017/';
+  const mongoURI = 'config.MONGODB_CONNECTION_STRING';
   const mongoDB = 'PFE';
   const mongoCollection = 'EcoDrivingKPIs';
   const driverId = req.params.driverId;
