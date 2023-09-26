@@ -83,6 +83,9 @@ app.get('/kpi/:driverId', async (req, res) => {
 
 app.get('/acc', async (req, res) => {
   try {
+    const env = process.env.NODE_ENV || 'development';
+    const config = require(`./src/config/config.${env}.json`);
+
     const pfeMongoURI = 'config.MONGODB_CONNECTION_STRING';
     const mongoDB = 'PFE';
     
@@ -155,6 +158,9 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 async function calculateCarsByBrand() {
+  const env = process.env.NODE_ENV || 'development';
+  const config = require(`./src/config/config.${env}.json`);
+
   const url =  'config.MONGODB_CONNECTION_STRING';
   const dbName = 'test';
   const collectionName = 'registrationcards';
@@ -189,6 +195,9 @@ async function calculateCarsByBrand() {
 
 // Fonction pour calculer le nombre total d'utilisateurs à partir de la base de données
 async function calculateTotalUsersFromDatabase() {
+  const env = process.env.NODE_ENV || 'development';
+const config = require(`./src/config/config.${env}.json`);
+ 
   const url = 'config.MONGODB_CONNECTION_STRING';
   const dbName = 'test';
   const collectionName = 'users';
@@ -289,7 +298,11 @@ app.get('/api/driver1Data', (req, res) => {
 
 //eco drive
 app.get('/ecodrivingkpis/:driverId', async (req, res) => {
+  
   try {
+    const env = process.env.NODE_ENV || 'development';
+const config = require(`./src/config/config.${env}.json`);
+
     const pfeMongoURI = 'config.MONGODB_CONNECTION_STRING';
     const mongoDB = 'PFE';
     
@@ -325,6 +338,7 @@ consumer.connect();
 const sseConnections = new Map();
 
 const twilio = require('twilio');
+
 
 // Configuration de la connexion à MongoDB
 const uri = 'config.MONGODB_CONNECTION_STRING';
@@ -457,6 +471,9 @@ app.get('/api/drivers', (req, res) => {
 
 
 app.get('/api/total-distance/:driverId', async (req, res) => {
+  const env = process.env.NODE_ENV || 'development';
+const config = require(`./src/config/config.${env}.json`);
+
 const mongoURI = 'config.MONGODB_CONNECTION_STRING';
 const mongoDB = 'PFE';
 const mongoTotalCollection = 'TotalDistance';
@@ -478,6 +495,9 @@ const mongoTotalCollection = 'TotalDistance';
   }
 });
 app.get('/api/distance/:driverId', async (req, res) => {
+  const env = process.env.NODE_ENV || 'development';
+const config = require(`./src/config/config.${env}.json`);
+
   const mongoURI = 'config.MONGODB_CONNECTION_STRING';
   const mongoDB = 'PFE';
   const mongoCollection = 'Distance';
@@ -504,6 +524,9 @@ app.get('/api/distance/:driverId', async (req, res) => {
 });
 
 app.get('/api/fuel/:driverId', async (req, res) => {
+  const env = process.env.NODE_ENV || 'development';
+const config = require(`./src/config/config.${env}.json`);
+
   const mongoURI = 'config.MONGODB_CONNECTION_STRING';
   const mongoDB = 'PFE';
   const mongoCollection = 'EcoDrivingKPIs';
