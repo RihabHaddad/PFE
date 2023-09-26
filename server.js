@@ -1,5 +1,7 @@
 const express = require('express');
 const app = express();
+const jwt = require('jsonwebtoken');
+const Admin = require('./src/Models/adminModel');
 const cors = require('cors');
 const authRoutes = require('./src/Routes/authRoutes');
 const bodyParser = require('body-parser');
@@ -29,13 +31,11 @@ app.use(function(req, res, next) {
 
 require('dotenv').config();
 
-const env = process.env.NODE_ENV || 'development';
-const config = require(`./src/config/config.${env}.json`);
-const connectionString = process.env.MONGODB_CONNECTION_STRING || config.MONGODB_CONNECTION_STRING;
 
-mongoose.connect(connectionString, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Connexion à MongoDB établie'))
-  .catch((err) => console.error('Erreur de connexion à MongoDB', err));
+const isProduction = process.env.NODE_ENV === 'production';
+const connectionString = isProduction ? process.env.COSMOSDB_CONNECTION_STRING : process.env.MONGODB_CONNECTION_STRING;
+
+mongoose.connect(connectionString, { useNewUrlParser: true, useUnifiedTopology: true });
 
 // Connexion à la base de données MongoDB
 
@@ -109,7 +109,35 @@ app.get('/acc', async (req, res) => {
   }
 });
 
+function verifyToken(req, res, next) {
+  const token = req.headers['authorization'].split('Bearer ')[1];
   
+  if (!token) {
+      return res.status(403).json({ message: 'Aucun token fourni.' });
+  }
+
+  jwt.verify(token, 'secretKey', (err, decoded) => {
+      if (err) {
+          return res.status(401).json({ message: 'Token non valide.' });
+      }
+      req.userId = decoded.userId;
+      next();
+  });
+}
+app.get('/me', verifyToken, async (req, res) => {
+  try {
+      const user = await Admin.findById(req.userId, '-password');
+      if (!user) {
+          return res.status(404).json({ message: 'Utilisateur non trouvé.' });
+      }
+      res.status(200).json(user);
+  } catch (error) {
+      console.error("Erreur lors de la récupération de l'utilisateur :", error);
+      res.status(500).json({ message: 'Erreur lors de la récupération des informations utilisateur.' });
+  }
+});
+
+
  
 
 app.get('/search', (req, res) => {
@@ -348,7 +376,7 @@ consumer.on('data', (message) => {
 
     // ...
 
-if (currentSpeed > 100) {
+if (currentSpeed > 120) {
   const driverId = data.DriverId;
   const notification = {
     driverId,

@@ -4,25 +4,41 @@ trigger:
 pool:
   name: 'ubuntu-pfe'
 
+variables:
+  nodeVersion: '14.21.3'
+  webAppName: 'autoGuardapp'
+  azureSubscription: 'Azure for Students'
+
 stages:
 - stage: Build
-  displayName: 'Build '
+  displayName: 'Build et Publier'
   jobs:
   - job: BuildJob
     steps:
     - task: UseNode@1
       inputs:
-        version: '14.21.3'
+        version: $(nodeVersion)
       displayName: 'Installer Node.js'
 
     - script: |
-        cd 
         npm install
       displayName: 'Installer les dépendances'
 
+    - script: |
+        npm run build
+      displayName: 'Construire l''application'
+
+    - task: ArchiveFiles@2
+      inputs:
+        rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/app.zip'
+      displayName: 'Archiver les fichiers'
+
     - task: PublishBuildArtifacts@1
       inputs:
-        pathtoPublish: '$(System.DefaultWorkingDirectory)'  
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)/app.zip'
         artifactName: 'backend-app'
       displayName: 'Publier l''application backend'
 
@@ -32,19 +48,22 @@ stages:
   jobs:
   - job: DeployJob
     steps:
-    - task: UseNode@1
+    - task: DownloadPipelineArtifact@2
       inputs:
-        version: '14.21.3'
-      displayName: 'Installer Node.js'
+        artifactName: 'backend-app'
+        targetPath: '$(System.DefaultWorkingDirectory)'
+      displayName: 'Télécharger l''artefact'
 
-    - script: |
-        cd $(System.DefaultWorkingDirectory)
-        npm install
-        npm start # Ou la commande de démarrage de votre application backend
-      displayName: 'Démarrer l''application Node.js'
+    - task: AzureRmWebAppDeployment@4
+      inputs:
+        ConnectionType: 'AzureRM'
+        azureSubscription: $(azureSubscription)
+        appType: 'webApp'
+        WebAppName: $(webAppName)
+        package: '$(System.DefaultWorkingDirectory)/app.zip'
+        RuntimeStack: 'NODE|$(nodeVersion)'
+        StartupCommand: 'npm start'
       env:
         NODE_ENV: $(NODE_ENV)
-        MONGODB_CONNECTION_STRING: $(MONGODB_CONNECTION_STRING)
-
-
-    
+        MONGODB_CONNECTION_STRING: $(AZURE_COSMOS_CONNECTIONSTRING)
+      displayName: 'Déployer sur Azure App Service'

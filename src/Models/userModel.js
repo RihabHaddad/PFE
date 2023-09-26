@@ -1,9 +1,10 @@
 const mongoose = require('mongoose');
-
+const Schema = mongoose.Schema;
 const userSchema = new mongoose.Schema({
-  _id: {
-    type :String
-  },
+  _id: { 
+    type: Schema.Types.ObjectId, 
+    required: true },
+
   DriverId: {
     type: String,
     required: true
